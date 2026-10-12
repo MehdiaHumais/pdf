@@ -1,0 +1,20 @@
+# BritPDF is built with Rust's GNU toolchain on this machine because the Microsoft
+# C++ Build Tools are not installed here, and the GNU toolchain that `rustup`
+# provides is fully self-contained: `rustc` bundles `ld`, `dlltool` and a
+# `x86_64-w64-mingw32-gcc` driver under the toolchain's
+# `lib/rustlib/x86_64-pc-windows-gnu/bin/self-contained` directory.
+#
+# Why the official *release* build should use MSVC instead:
+#   * The vendored `pdfium.dll` is a Chromium build linked against the MSVC
+#     runtime. Windows ships `vcruntime140.dll`, so a GNU-built BritPDF loads it
+#     correctly, but MSVC is the pairing Microsoft actually tests.
+#   * Tauri, the `windows` crate, WiX and the code-signing tools are all
+#     MSVC-first.
+#
+# To build a release with MSVC instead, install "Desktop development with C++"
+# from the Visual Studio Build Tools, then:
+#     rustup override set stable-x86_64-pc-windows-msvc
+# or replace the channel below with "stable-x86_64-pc-windows-msvc".
+[toolchain]
+channel = "stable-x86_64-pc-windows-gnu"
+components = ["rustfmt", "clippy"]

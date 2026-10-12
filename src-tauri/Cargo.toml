@@ -1,0 +1,77 @@
+[package]
+name = "britpdf"
+version = "1.0.0"
+description = "BritPDF - professional Windows PDF application (BritOffice suite)"
+authors = ["BritOffice"]
+edition = "2021"
+rust-version = "1.88"
+default-run = "britpdf"
+
+[lib]
+name = "britpdf_lib"
+crate-type = ["staticlib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+log = "0.4"
+dirs = "6"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+uuid = { version = "1", features = ["v4"] }
+parking_lot = "0.12"
+rayon = "1"
+base64 = "0.22"
+flate2 = "1"
+
+# --- PDF engine -------------------------------------------------------------
+# PDFium (BSD-3-Clause, the renderer shipped with Chromium/Edge) via
+# pdfium-render (MIT OR Apache-2.0): rendering, parsing, text layer,
+# annotation authoring + incremental save.
+pdfium-render = { version = "0.9", features = ["pdfium_latest", "image_latest", "thread_safe"] }
+# lopdf (MIT): structural PDF editing - page trees, merge/split, rotation,
+# metadata, encryption, redaction, PDF creation, image embedding.
+lopdf = { version = "0.45", default-features = false, features = ["chrono-clock"] }
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "gif", "bmp", "tiff"] }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_System_Com",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Threading",
+    "Win32_UI_Shell",
+"Win32_UI_WindowsAndMessaging",
+    "Win32_Graphics_Printing",
+    "Win32_Security",
+    "Win32_Storage_EnhancedStorage",
+    "Win32_Storage_Xps",
+    "Foundation",
+    "Foundation_Collections",
+    "Globalization",
+    "Graphics_Imaging",
+    "Media_Ocr",
+    "Storage",
+    "Storage_Streams",
+] }
+windows-future = { version = "0.3", features = ["std"] }
+
+[features]
+default = ["ocr-windows"]
+# Windows.Media.Ocr based OCR engine (built into Windows 10/11, fully offline).
+ocr-windows = []
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
+
