@@ -35,7 +35,7 @@
         "style-src": "'self' 'unsafe-inline'",
         "script-src": "'self'",
         "font-src": "'self' data:",
-        "connect-src": "'self' ipc: http://ipc.localhost",
+        "connect-src": "'self' ipc: http://ipc.localhost ws://localhost:* wss://localhost:*",
         "object-src": "'none'",
         "frame-src": "'none'",
         "base-uri": "'self'",

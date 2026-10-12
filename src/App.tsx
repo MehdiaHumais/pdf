@@ -3936,7 +3936,16 @@ function Row({ label, value }: { label: string; value: ReactNode }) {
 }
 
 function PropsPanel({ doc, dirty, selected, geometries, onClose }: PropsPanelProps) {
-  const m = doc.metadata;
+  const m: Metadata = doc.metadata ?? {
+    title: null,
+    author: null,
+    subject: null,
+    keywords: null,
+    creator: null,
+    producer: null,
+    creation_date: null,
+    modification_date: null,
+  };
   const isPage = selected.kind === "page";
   const title = isPage ? `Page Properties` : `Document Properties`;
 
@@ -4364,6 +4373,8 @@ export default function App() {
   }, [showError]);
 
   useEffect(() => {
+    let unlistenFn: (() => void) | null = null;
+
     void (async () => {
       try {
         setAppInfo(await invoke<AppInfo>("app_info"));
@@ -4371,13 +4382,27 @@ export default function App() {
         showError(e);
       }
     })();
+
     void refreshRecents();
-    const unlisten = listen<string[]>("britpdf:open-requested", (event) => {
-      const paths = event.payload ?? [];
-      if (paths.length > 0) void openPath(paths[0]);
-    });
+
+    // Guard: listen() requires the Tauri IPC bridge to be ready.
+    // Capturing the unlisten handle in an async IIFE prevents an unhandled
+    // rejection from the transformCallback race during Vite HMR fast-refresh.
+    void (async () => {
+      try {
+        unlistenFn = await listen<string[]>("britpdf:open-requested", (event) => {
+          const paths = event.payload ?? [];
+          if (paths.length > 0) void openPath(paths[0]);
+        });
+      } catch (e) {
+        // IPC bridge not yet ready (HMR edge case) — non-fatal, the listener
+        // will be re-registered on the next mount.
+        console.warn("[BritPDF] Could not attach open-requested listener:", e);
+      }
+    })();
+
     return () => {
-      void unlisten.then((fn) => fn());
+      if (unlistenFn) unlistenFn();
       if (toastTimer.current) window.clearTimeout(toastTimer.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
